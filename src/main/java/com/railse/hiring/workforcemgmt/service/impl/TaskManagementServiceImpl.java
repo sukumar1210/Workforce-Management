@@ -42,7 +42,7 @@ public class TaskManagementServiceImpl implements TaskManagementService {
    @Override
    public List<TaskManagementDto> createTasks(TaskCreateRequest createRequest) {
        List<TaskManagement> createdTasks = new ArrayList<>();
-       for (TaskCreateRequest.RequestItem item : createRequest.getRequests()) {
+       for (TaskCreateRequest.CreateRequestItem item : createRequest.getRequests()) {
            TaskManagement newTask = new TaskManagement();
            newTask.setReferenceId(item.getReferenceId());
            newTask.setReferenceType(item.getReferenceType());
@@ -61,7 +61,7 @@ public class TaskManagementServiceImpl implements TaskManagementService {
    @Override
    public List<TaskManagementDto> updateTasks(UpdateTaskRequest updateRequest) {
        List<TaskManagement> updatedTasks = new ArrayList<>();
-       for (UpdateTaskRequest.RequestItem item : updateRequest.getRequests()) {
+       for (UpdateTaskRequest.UpdateRequestItem item : updateRequest.getRequests()) {
            TaskManagement task = taskRepository.findById(item.getTaskId())
                    .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + item.getTaskId()));
 

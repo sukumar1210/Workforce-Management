@@ -13,12 +13,12 @@ import java.util.List;
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateTaskRequest {
-   private List<RequestItem> requests;
+   private List<UpdateRequestItem> requests;
 
 
    @Data
    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-   public static class RequestItem {
+   public static class UpdateRequestItem {
        private Long taskId;
        private TaskStatus taskStatus;
        private String description;

@@ -15,12 +15,12 @@ import java.util.List;
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TaskCreateRequest {
-   private List<RequestItem> requests;
+   private List<CreateRequestItem> requests;
 
 
    @Data
    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-   public static class RequestItem {
+   public static class CreateRequestItem {
        private Long referenceId;
        private ReferenceType referenceType;
        private Task task;
