@@ -37,19 +37,29 @@ public class InMemoryTaskRepository implements TaskRepository {
 
 
    private void createSeedTask(Long refId, ReferenceType refType, Task task, Long assigneeId, TaskStatus status, Priority priority) {
-       long newId = idCounter.incrementAndGet();
-       TaskManagement newTask = new TaskManagement();
-       newTask.setId(newId);
-       newTask.setReferenceId(refId);
-       newTask.setReferenceType(refType);
-       newTask.setTask(task);
-       newTask.setAssigneeId(assigneeId);
-       newTask.setStatus(status);
-       newTask.setPriority(priority);
-       newTask.setDescription("This is a seed task.");
-       newTask.setTaskDeadlineTime(System.currentTimeMillis() + 86400000); // 1 day from now
-       taskStore.put(newId, newTask);
-   }
+        // Cancel older tasks of same referenceId + referenceType + taskType
+        taskStore.values().stream()
+            .filter(t -> t.getReferenceId().equals(refId)
+                    && t.getReferenceType() == refType
+                    && t.getTask() == task
+                    && t.getStatus() != TaskStatus.COMPLETED
+                    && t.getStatus() != TaskStatus.CANCELLED)
+            .forEach(t -> t.setStatus(TaskStatus.CANCELLED));
+
+        // Create new task
+        long newId = idCounter.incrementAndGet();
+        TaskManagement newTask = new TaskManagement();
+        newTask.setId(newId);
+        newTask.setReferenceId(refId);
+        newTask.setReferenceType(refType);
+        newTask.setTask(task);
+        newTask.setAssigneeId(assigneeId);
+        newTask.setStatus(status);
+        newTask.setPriority(priority);
+        newTask.setDescription("This is a seed task.");
+        newTask.setTaskDeadlineTime(System.currentTimeMillis() + 86400000); // 1 day from now
+        taskStore.put(newId, newTask);
+    }
 
 
    @Override

@@ -9,6 +9,9 @@ import com.railse.hiring.workforcemgmt.model.enums.Task;
 import com.railse.hiring.workforcemgmt.model.enums.TaskStatus;
 import com.railse.hiring.workforcemgmt.repository.TaskRepository;
 import com.railse.hiring.workforcemgmt.service.TaskManagementService;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
 
 
 @Service
+@Slf4j
 public class TaskManagementServiceImpl implements TaskManagementService {
 
 
@@ -41,27 +45,43 @@ public class TaskManagementServiceImpl implements TaskManagementService {
 
    @Override
    public List<TaskManagementDto> createTasks(TaskCreateRequest createRequest) {
-       List<TaskManagement> createdTasks = new ArrayList<>();
-       for (TaskCreateRequest.CreateRequestItem item : createRequest.getRequests()) {
-           TaskManagement newTask = new TaskManagement();
-           newTask.setReferenceId(item.getReferenceId());
-           newTask.setReferenceType(item.getReferenceType());
-           newTask.setTask(item.getTask());
-           newTask.setAssigneeId(item.getAssigneeId());
-           newTask.setPriority(item.getPriority());
-           newTask.setTaskDeadlineTime(item.getTaskDeadlineTime());
-           newTask.setStatus(TaskStatus.ASSIGNED);
-           newTask.setDescription("New task created.");
-           createdTasks.add(taskRepository.save(newTask));
-       }
-       return taskMapper.modelListToDtoList(createdTasks);
-   }
+    List<TaskManagement> createdTasks = new ArrayList<>();
+    for (TaskCreateRequest.RequestItem item : createRequest.getRequests()) {
+        // BUG #1: while creating new tasks the same check needs to be done to prevent the same bug while task creation.
+        // 1. Fetch all tasks for this reference
+        List<TaskManagement> existingTasks = taskRepository.findByReferenceIdAndReferenceType(
+                item.getReferenceId(), item.getReferenceType());
+
+        // 2. Cancel existing tasks of the same task type (not completed)
+        for (TaskManagement existing : existingTasks) {
+            if (existing.getTask().equals(item.getTask())  && existing.getStatus() != TaskStatus.COMPLETED) {
+                existing.setStatus(TaskStatus.CANCELLED);
+                taskRepository.save(existing);
+            }
+        }
+
+        // 3. Create new task
+        TaskManagement newTask = new TaskManagement();
+        newTask.setReferenceId(item.getReferenceId());
+        newTask.setReferenceType(item.getReferenceType());
+        newTask.setTask(item.getTask());
+        newTask.setAssigneeId(item.getAssigneeId());
+        newTask.setPriority(item.getPriority());
+        newTask.setTaskDeadlineTime(item.getTaskDeadlineTime());
+        newTask.setStatus(TaskStatus.ASSIGNED);
+        newTask.setDescription("New task created.");
+        createdTasks.add(taskRepository.save(newTask));
+    }
+
+    return taskMapper.modelListToDtoList(createdTasks);
+}
+
 
 
    @Override
    public List<TaskManagementDto> updateTasks(UpdateTaskRequest updateRequest) {
        List<TaskManagement> updatedTasks = new ArrayList<>();
-       for (UpdateTaskRequest.UpdateRequestItem item : updateRequest.getRequests()) {
+       for (UpdateTaskRequest.RequestItem item : updateRequest.getRequests()) {
            TaskManagement task = taskRepository.findById(item.getTaskId())
                    .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + item.getTaskId()));
 
@@ -90,14 +110,27 @@ public class TaskManagementServiceImpl implements TaskManagementService {
                    .collect(Collectors.toList());
 
 
-           // BUG #1 is here. It should assign one and cancel the rest.
-           // Instead, it reassigns ALL of them.
+           // BUG #1 is here.
+           // NOTE: This is a design choice for this example.
+           // I would usually want to do this in a transaction when in real life scenario with a database.
+           // But for this example, we do not have a database hence i am not considering the disk write failures.
            if (!tasksOfType.isEmpty()) {
-               for (TaskManagement taskToUpdate : tasksOfType) {
-                   taskToUpdate.setAssigneeId(request.getAssigneeId());
-                   taskRepository.save(taskToUpdate);
-               }
-           } else {
+
+                // Cancel all previous tasks
+                for (TaskManagement oldTask : tasksOfType) {
+                    oldTask.setStatus(TaskStatus.CANCELLED);
+                    taskRepository.save(oldTask);
+                }
+
+                // Create a new task for the new assignee
+                TaskManagement newTask = new TaskManagement();
+                newTask.setReferenceId(request.getReferenceId());
+                newTask.setReferenceType(request.getReferenceType());
+                newTask.setTask(taskType);
+                newTask.setAssigneeId(request.getAssigneeId());
+                newTask.setStatus(TaskStatus.ASSIGNED);
+                taskRepository.save(newTask);
+            } else {
                // Create a new task if none exist
                TaskManagement newTask = new TaskManagement();
                newTask.setReferenceId(request.getReferenceId());
