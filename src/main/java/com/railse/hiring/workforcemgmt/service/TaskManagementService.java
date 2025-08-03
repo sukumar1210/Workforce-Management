@@ -13,4 +13,5 @@ public interface TaskManagementService {
    String assignByReference(AssignByReferenceRequest request);
    List<TaskManagementDto> fetchTasksByDate(TaskFetchByDateRequest request);
    TaskManagementDto findTaskById(Long id);
+   List<TaskManagementDto> smartFetchTasksByDate(TaskFetchByDateRequest request);
 }

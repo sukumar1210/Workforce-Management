@@ -51,4 +51,9 @@ public class TaskManagementController {
    public Response<List<TaskManagementDto>> fetchByDate(@RequestBody TaskFetchByDateRequest request) {
        return new Response<>(taskManagementService.fetchTasksByDate(request));
    }
+
+   @PostMapping("/smart-fetch-by-date/")
+   public Response<List<TaskManagementDto>> smartFetchByDate(@RequestBody TaskFetchByDateRequest request) {
+       return new Response<>(taskManagementService.fetchTasksByDate(request));
+   }
 }

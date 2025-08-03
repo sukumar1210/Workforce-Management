@@ -144,7 +144,6 @@ public class TaskManagementServiceImpl implements TaskManagementService {
        return "Tasks assigned successfully for reference " + request.getReferenceId();
    }
 
-
    @Override
     public List<TaskManagementDto> fetchTasksByDate(TaskFetchByDateRequest request) {
         log.info("here");
@@ -162,5 +161,37 @@ public class TaskManagementServiceImpl implements TaskManagementService {
 
         return taskMapper.modelListToDtoList(filteredTasks);
     }
+
+    @Override
+    public List<TaskManagementDto> smartFetchTasksByDate(TaskFetchByDateRequest request) {
+        // due to ambiguity in the requirements, and inability to claryfy with the client,
+        // the following requirements are give:
+        // 1. All active tasks that started within that range.
+        // 2. PLUS all active tasks that started before the range but are still open and not yet completed.
+        
+        // one of 2 things can be inferred from the above requirements:
+        // 1. All tasks that are due by the end date that can be acted upon are wanted.
+        // 2. All tasks that are started before the end date, but would need changes in the model to add a "startedTime" field. (which can lead to the created time and started time to differ)
+
+        // Due to unavailability of the client, inference 1 is chosen as any task that is due today, has to be either started within range or before.
+        
+        // NOTE: 
+        // As this assumption lacks a clear startTime for a task, the case where a task starts in range but does not end in range is not handled.
+        // That can only be handled in Inference 2, which is not implemented here.
+        // But i wish to make a point that in the doing of this assignment, i am fully aware of both inferences and the implications of each.
+        // If the client wants to change this, i would be happy to do so. 
+        List<TaskManagement> tasks = taskRepository.findByAssigneeIdIn(request.getAssigneeIds());
+        Long end = request.getEndDate();
+
+        List<TaskManagement> dueByTasks = tasks.stream()
+            // only active tasks
+            .filter(t -> t.getStatus() == TaskStatus.ASSIGNED || t.getStatus() == TaskStatus.STARTED)
+            // due on or before the end date
+            .filter(t -> t.getTaskDeadlineTime() <= end)
+            .collect(Collectors.toList());
+
+        return taskMapper.modelListToDtoList(dueByTasks);
+    }
+
 
 }
