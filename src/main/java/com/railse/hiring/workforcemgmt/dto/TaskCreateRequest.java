@@ -6,8 +6,10 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.railse.hiring.workforcemgmt.common.model.enums.ReferenceType;
 import com.railse.hiring.workforcemgmt.model.enums.Priority;
 import com.railse.hiring.workforcemgmt.model.enums.Task;
-import lombok.Data;
 
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 
@@ -15,7 +17,10 @@ import java.util.List;
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TaskCreateRequest {
-   private List<RequestItem> requests;
+
+    @NotNull(message = "performedBy is required")
+    private @Getter Integer performedBy;
+   private @Getter List<RequestItem> requests;
 
 
    @Data

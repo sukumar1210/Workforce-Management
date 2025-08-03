@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
 
 import com.railse.hiring.workforcemgmt.common.model.enums.ReferenceType;
+import com.railse.hiring.workforcemgmt.model.TaskActivity;
 import com.railse.hiring.workforcemgmt.model.TaskManagement;
 import com.railse.hiring.workforcemgmt.model.enums.Priority;
 import com.railse.hiring.workforcemgmt.model.enums.Task;
@@ -37,6 +38,11 @@ public class InMemoryTaskRepository implements TaskRepository {
 
 
    private void createSeedTask(Long refId, ReferenceType refType, Task task, Long assigneeId, TaskStatus status, Priority priority) {
+        long newId = idCounter.incrementAndGet();    
+
+        List<TaskActivity> activities = new java.util.ArrayList<>();
+        activities.add(new TaskActivity("0 create Task with ID: " + newId, System.currentTimeMillis()));
+
         // Cancel older tasks of same referenceId + referenceType + taskType
         taskStore.values().stream()
             .filter(t -> t.getReferenceId().equals(refId)
@@ -44,16 +50,19 @@ public class InMemoryTaskRepository implements TaskRepository {
                     && t.getTask() == task
                     && t.getStatus() != TaskStatus.COMPLETED
                     && t.getStatus() != TaskStatus.CANCELLED)
-            .forEach(t -> t.setStatus(TaskStatus.CANCELLED));
+            .forEach(t -> {
+                t.setStatus(TaskStatus.CANCELLED);
+                t.getActivities().add(new TaskActivity("0 cancelled Task with ID: " + t.getId() + " for new task creation", System.currentTimeMillis()));
+            });
 
         // Create new task
-        long newId = idCounter.incrementAndGet();
         TaskManagement newTask = new TaskManagement();
         newTask.setId(newId);
         newTask.setReferenceId(refId);
         newTask.setReferenceType(refType);
         newTask.setTask(task);
         newTask.setAssigneeId(assigneeId);
+        newTask.setActivities(activities);
         newTask.setStatus(status);
         newTask.setPriority(priority);
         newTask.setDescription("This is a seed task.");

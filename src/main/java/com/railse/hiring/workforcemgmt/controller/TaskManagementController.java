@@ -6,6 +6,8 @@ import com.railse.hiring.workforcemgmt.dto.*;
 import com.railse.hiring.workforcemgmt.model.enums.Priority;
 import com.railse.hiring.workforcemgmt.service.TaskManagementService;
 
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.*;
 
 
@@ -32,19 +34,19 @@ public class TaskManagementController {
 
 
    @PostMapping("/create")
-   public Response<List<TaskManagementDto>> createTasks(@RequestBody TaskCreateRequest request) {
+   public Response<List<TaskManagementDto>> createTasks(@Valid @RequestBody TaskCreateRequest request) {
        return new Response<>(taskManagementService.createTasks(request));
    }
 
 
    @PostMapping("/update")
-   public Response<List<TaskManagementDto>> updateTasks(@RequestBody UpdateTaskRequest request) {
+   public Response<List<TaskManagementDto>> updateTasks(@Valid @RequestBody UpdateTaskRequest request) {
        return new Response<>(taskManagementService.updateTasks(request));
    }
 
 
    @PostMapping("/assign-by-ref")
-   public Response<String> assignByReference(@RequestBody AssignByReferenceRequest request) {
+   public Response<String> assignByReference(@Valid @RequestBody AssignByReferenceRequest request) {
        return new Response<>(taskManagementService.assignByReference(request));
    }
 
@@ -60,8 +62,8 @@ public class TaskManagementController {
    }
 
    @PatchMapping("/tasks/{id}/priority")
-    public Response<String> updateTaskPriority(@PathVariable Long id, @RequestBody UpdatePriorityRequest request) {
-        return new Response<>(taskManagementService.updateTaskPriority(id, request.getPriority()));
+    public Response<String> updateTaskPriority(@PathVariable Long id, @Valid @RequestBody UpdatePriorityRequest request) {
+        return new Response<>(taskManagementService.updateTaskPriority(id, request));
     }
 
     @GetMapping("/tasks/priority/{priority}")
@@ -69,6 +71,10 @@ public class TaskManagementController {
         List<TaskManagementDto> tasks = taskManagementService.fetchTasksByPriority(priority);
         return new Response<>(tasks);
     }
-
+    
+    @PostMapping("/tasks/{id}/comments")
+    public Response<String> addComment(@PathVariable Long id, @Valid @RequestBody AddCommentRequest request) {
+        return new Response<>(taskManagementService.addComment(id, request));
+    }
 
 }

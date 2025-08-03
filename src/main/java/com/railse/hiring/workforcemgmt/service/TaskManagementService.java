@@ -14,6 +14,7 @@ public interface TaskManagementService {
    List<TaskManagementDto> fetchTasksByDate(TaskFetchByDateRequest request);
    TaskManagementDto findTaskById(Long id);
    List<TaskManagementDto> smartFetchTasksByDate(TaskFetchByDateRequest request);
-   String updateTaskPriority(Long taskId, Priority newPriority);
+   String updateTaskPriority(Long taskId, UpdatePriorityRequest request);
    List<TaskManagementDto> fetchTasksByPriority(Priority priority);
+   String addComment(Long id, AddCommentRequest request);
 }
