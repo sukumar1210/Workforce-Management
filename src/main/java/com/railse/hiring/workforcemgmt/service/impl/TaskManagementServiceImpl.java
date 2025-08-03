@@ -5,6 +5,7 @@ import com.railse.hiring.workforcemgmt.common.exception.ResourceNotFoundExceptio
 import com.railse.hiring.workforcemgmt.dto.*;
 import com.railse.hiring.workforcemgmt.mapper.ITaskManagementMapper;
 import com.railse.hiring.workforcemgmt.model.TaskManagement;
+import com.railse.hiring.workforcemgmt.model.enums.Priority;
 import com.railse.hiring.workforcemgmt.model.enums.Task;
 import com.railse.hiring.workforcemgmt.model.enums.TaskStatus;
 import com.railse.hiring.workforcemgmt.repository.TaskRepository;
@@ -191,6 +192,25 @@ public class TaskManagementServiceImpl implements TaskManagementService {
             .collect(Collectors.toList());
 
         return taskMapper.modelListToDtoList(dueByTasks);
+    }
+
+    @Override
+    public String updateTaskPriority(Long taskId, Priority newPriority) {
+        TaskManagement task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        task.setPriority(newPriority);
+        taskRepository.save(task);
+        return "Task priority updated successfully";
+    }
+
+    @Override
+    public List<TaskManagementDto> fetchTasksByPriority(Priority priority) {
+        // only returns the active tasks with the given priority
+        // NOTE: This is a design choice for this example.
+        // In a real world scenario, i would want to return all tasks with the given priority along with more filters such as assignee and time-range based fetching
+        List<TaskManagement> tasks = taskRepository.findByPriority(priority);
+        return taskMapper.modelListToDtoList(tasks);
     }
 
 
